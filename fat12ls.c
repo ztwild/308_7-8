@@ -120,17 +120,33 @@ void decodeBootSector(struct BootSector * pBootS, unsigned char buffer[]){
   int i = 3;  // Skip the first 3 bytes
 
   // Pull the name and put it in the struct (remember to null-terminate)
-
+  int j;
+  for(j = i; j < 8 + i; j++){
+    int index = 8 - (j - 3);
+    pBootS->sName[index] = buffer[j];
+  }
+  
   // Read bytes/sector and convert to big endian
+  pBootS->iBytesSector  = endianSwap(buffer[11], buffer[12]);
 
   // Read sectors/cluster, Reserved sectors and Number of Fats
-
+  pBootS->iSectorsCluster = buffer[13];
+  pBootS->iReservedSectors = endianSwap(buffer[14], buffer[15]);    // Reserved sectors
+  pBootS->iNumberFATs = buffer[16];                                 // Number of FATs
+  
   // Read root entries, logicical sectors and medium descriptor
-
+  pBootS->iRootEntries = endianSwap(buffer[17], buffer[18]);        // Number of Root Directory entries
+  pBootS->iLogicalSectors = endianSwap(buffer[19], buffer[20]);     // Number of logical sectors
+  pBootS->xMediumDescriptor = buffer[21];                           // Medium descriptor
+  
   // Read and covert sectors/fat, sectors/track, and number of heads
-
+  pBootS->iSectorsFAT = endianSwap(buffer[22], buffer[23]);         // Sectors per FAT 
+  pBootS->iSectorsTrack = endianSwap(buffer[24], buffer[25]);       // Sectors per Track 
+  pBootS->iHeads = endianSwap(buffer[26], buffer[27]);              // Number of heads 
+  
   // Read hidden sectors
-
+  pBootS->iHiddenSectors = endianSwap(buffer[28], buffer[29]);      // Number of hidden sectors 
+  
   return;
 }
 

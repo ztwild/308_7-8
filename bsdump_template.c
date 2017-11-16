@@ -101,7 +101,6 @@ void print_name(unsigned char name[]){
   int i = 3;  // Skip the first 3 bytes
     
   // Pull the name and put it in the struct (remember to null-terminate)
-  //get name from i length 8
   int j;
   for(j = i; j < 8 + i; j++){
     int index = 8 - (j - 3);
