@@ -1,5 +1,5 @@
-all: bsdump_template.c
-	gcc -o bsdump bsdump_template.c
+all: bsdump.c
+	gcc -o bsdump bsdump.c
 	./bsdump image
 byte: bytedump.c
 	gcc -o bytedump bytedump.c
