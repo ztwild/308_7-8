@@ -75,7 +75,7 @@ int roundup512(int number);
   int pBootSector = 0;
   unsigned char buffer[SIZE];
   unsigned char rootBuffer[ROOTSIZE * 32];
-  struct BootSector sector;#include <stdlib.h>
+  struct BootSector sector;
   int iRDOffset = 0;
 
   // Check for argument
@@ -118,9 +118,8 @@ void decodeBootSector(struct BootSector * pBootS, unsigned char buffer[]){
 
   // Pull the name and put it in the struct (remember to null-terminate)
   int j;
-  for(j = i; j < 8 + i; j++){
-    int index = 8 - (j - 3);
-    pBootS->sName[index] = buffer[j];
+  for(j = 0; j < 8; j++){
+    pBootS->sName[j] = buffer[j + i];
   }
   
   // Read bytes/sector and convert to big endian
@@ -153,15 +152,14 @@ void decodeBootSector(struct BootSector * pBootS, unsigned char buffer[]){
 void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[]){
     int i = 0;
     char string[13];
-
+    printf("There are %d entries\n", iEntries);
     // Display table header with labels
     printf("Filename\tAttrib\tTime\t\tDate\t\tSize\n");
 
     // loop through directory entries to print information for each
     //for(i = 0; i < (iEntries); i = i + /* entry width */)   {
     for(i = 0; i < (iEntries); i = i + 32)   {
-        // if (  /* valid file */ ) {
-        if (buffer[i] != 0 && buffer[i] != 229) {
+      if (buffer[i] != 0x00 && buffer[i] != 0xE5) {
         // Display filename
         printf("%s\t", toDOSName(string, buffer, iDirOff)  ); /*name offset*/
         // Display Attributes
@@ -169,13 +167,13 @@ void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[]){
         // Display Time
         printf("%s\t", parseTime(string, endianSwap(buffer[iDirOff + 22], buffer[iDirOff + 23]) ));  /*time offsets */
         // Display Date
-        printf("%s\t", parseDate(string, endianSwap(buffer[iDirOff + 24], buffer[iDirOff + 25]) ); /*date offsets */
+        printf("%s\t", parseDate(string, endianSwap(buffer[iDirOff + 24], buffer[iDirOff + 25]) )); /*date offsets */
         // Display Size
-        unsigned short first =endianSwap( buffer[iDirOff + 26], buffer[iDirOff + 27] );
-        unsigned short second = endianSwap( buffer[iDirOff + 28], buffer[iDirOff + 29] );
+        unsigned short first =endianSwap( buffer[iDirOff + 28], buffer[iDirOff + 29] );
+        unsigned short second = endianSwap( buffer[iDirOff + 30], buffer[iDirOff + 31] );
         int size = ( second >> 16 ) | first;
-        printf("%d\n", , size); /* size offsets */
-        }
+        printf("%d\n", size); /* size offsets */
+      }
     }
 
     // Display key
@@ -185,17 +183,17 @@ void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[]){
 
 // Parses the attributes bits of a file
 char * parseAttributes(char string[], unsigned char key){
-    int j = 0;
+    int i, j = 0;
     char keys[] = {'R', 'H', 'S', '\0', 'A'};
 
-    printf("key: 0x%02x, ", key);
+    //printf("key: 0x%02x, ", key);
     for(i = 0; i < 5; i++){
         if(key % 2 == 1 && i != 3){
             string[j++] = keys[i];
         }
         key = key >> 1;
     }
-    printf("string: %s\n", string);
+   // printf("string: %s\n", string);
     // while(j < 13){
     //     string[j++] = '\0';
     // }
@@ -207,8 +205,8 @@ char * parseAttributes(char string[], unsigned char key){
 char * parseTime(char string[], unsigned short usTime){
     unsigned char hour = 0x00, min = 0x00, sec = 0x00;
     
-    // DEBUG: 
-    printf("time: %x", usTime);
+    // DEBUG: printf("time: %x", usTime);
+    
     sec = (usTime & 31) * 2;
     min = (usTime >> 5) & 63;
     hour = (usTime >> 11) & 31;
@@ -227,8 +225,8 @@ char * parseDate(char string[], unsigned short usDate){
     unsigned char month = 0x00, day = 0x00;
     unsigned short year = 0x0000;
 
-    //
-    printf("date: %x", usDate);
+    //printf("date: %x", usDate);
+    
     day = (usDate & 31);
     month = (usDate >> 5) & 15;
     year = (usDate >> 9) & 127;
@@ -242,23 +240,28 @@ char * parseDate(char string[], unsigned short usDate){
 
 int roundup512(int number){
   if(number % 512 != 0){
-    printf("Original number: %d\n", number);
+    //printf("Original number: %d\n", number);
     number = (number / 512) + 1 * 512;
-    printf("roundup 512: %d\n", number);
+    //printf("roundup 512: %d\n", number);
   }
   return number;
 }
 
 // Formats a filename string as DOS (adds the dot to 8-dot-3)
 char * toDOSName(char string[], unsigned char buffer[], int offset){
-    int i;
-    string[12] = '\0';
-    for(i = 0; i < 8; i++){
-        string[11 - i] = buffer[i + offset];
+    //printf("starting at %d\n", offset);
+    int i = 0, j;
+    //printf("Value of first: 0x%02x\n", buffer[i + offset]);
+    //printf("is equal to 0x20: %d\n", buffer[i + offset] != 0x20);
+    
+    while(buffer[i + offset] != 0x20 || i == 8){
+      string[i] = buffer[i + offset];
+      i++;
     }
-    string[6] = '.';
-    for(i = 8; i < 11; i++){
-        string[12 - i] = buffer[i + offset];
+    string[i++] = '.';
+    for(j = 8; i < 11; i++){
+      string[i] = buffer[j + offset];
     }
+    string[i] = '\0';
     return string;
 } // end toDosNameRead-Only Bit

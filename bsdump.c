@@ -88,7 +88,7 @@ void print(int addr, unsigned char c){
 //Prints that name of Boot Sector
 void print_name(unsigned char name[]){
   int j;
-  for(j = 0; j < 9; j++){
+  for(j = 0; j < 8; j++){
     printf("%c", name[j]);
   }
   printf("\n");
@@ -100,9 +100,8 @@ void print_name(unsigned char name[]){
     
   // Pull the name and put it in the struct (remember to null-terminate)
   int j;
-  for(j = i; j < 8 + i; j++){
-    int index = 8 - (j - 3);
-    pBootS->sName[index] = buffer[j];
+  for(j = 0; j < 8; j++){
+    pBootS->sName[j] = buffer[j + i];
   }
     
   // Read bytes/sector and convert to big endian
