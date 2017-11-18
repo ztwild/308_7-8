@@ -174,7 +174,7 @@ void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[]){
         unsigned short first =endianSwap( buffer[iDirOff + 26], buffer[iDirOff + 27] );
         unsigned short second = endianSwap( buffer[iDirOff + 28], buffer[iDirOff + 29] );
         int size = ( second >> 16 ) | first;
-        printf("%d\n", , second); /* size offsets */
+        printf("%d\n", , size); /* size offsets */
         }
     }
 
