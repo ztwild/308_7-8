@@ -76,10 +76,8 @@ int main(int argc, char * argv[]){
 
 // Converts two characters to an unsigned short with two, one
 unsigned short endianSwap(unsigned char one, unsigned char two){
-  unsigned short s = two;
-  s = s << 8;
-  s = s | one;
-  return s;
+    unsigned short s = two << 8 | one;
+    return s;
 }
 
 //For testing
