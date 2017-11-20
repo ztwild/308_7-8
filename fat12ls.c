@@ -100,7 +100,7 @@ int roundup512(int number);
   close(pBootSector);
 
   // Parse the root directory
-  parseDirectory(iRDOffset, sector.iRootEntries, rootBuffer);
+  parseDirectory(0, sector.iRootEntries, rootBuffer);
     
 } // end main
 
@@ -152,25 +152,24 @@ void decodeBootSector(struct BootSector * pBootS, unsigned char buffer[]){
 void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[]){
     int i = 0;
     char string[13];
-    printf("There are %d entries\n", iEntries);
+    printf("There are %d entries, offset is %d\n", iEntries, iDirOff);
     // Display table header with labels
     printf("Filename\tAttrib\tTime\t\tDate\t\tSize\n");
 
     // loop through directory entries to print information for each
-    //for(i = 0; i < (iEntries); i = i + /* entry width */)   {
-    for(i = 0; i < (iEntries); i = i + 32)   {
+    for(i = 0; i < (iEntries); i = i + 32){
       if (buffer[i] != 0x00 && buffer[i] != 0xE5) {
         // Display filename
-        printf("%s\t", toDOSName(string, buffer, iDirOff)  ); /*name offset*/
+        printf("%s\t", toDOSName(string, buffer, i)  );
         // Display Attributes
-        printf("%s\t", parseAttributes(string, buffer[iDirOff + 11])  ); /* attr offset */
+        printf("%s\t", parseAttributes(string, buffer[i + 11])  );
         // Display Time
-        printf("%s\t", parseTime(string, endianSwap(buffer[iDirOff + 22], buffer[iDirOff + 23]) ));  /*time offsets */
+        printf("%s\t", parseTime(string, endianSwap(buffer[i + 22], buffer[i + 23]) ));
         // Display Date
-        printf("%s\t", parseDate(string, endianSwap(buffer[iDirOff + 24], buffer[iDirOff + 25]) )); /*date offsets */
+        printf("%s\t", parseDate(string, endianSwap(buffer[i + 24], buffer[i + 25]) ));
         // Display Size
-        unsigned short first =endianSwap( buffer[iDirOff + 28], buffer[iDirOff + 29] );
-        unsigned short second = endianSwap( buffer[iDirOff + 30], buffer[iDirOff + 31] );
+        unsigned short first =endianSwap( buffer[i + 28], buffer[i + 29] );
+        unsigned short second = endianSwap( buffer[i + 30], buffer[i + 31] );
         int size = ( second >> 16 ) | first;
         printf("%d\n", size); /* size offsets */
       }
@@ -183,21 +182,17 @@ void parseDirectory(int iDirOff, int iEntries, unsigned char buffer[]){
 
 // Parses the attributes bits of a file
 char * parseAttributes(char string[], unsigned char key){
-    int i, j = 0;
-    char keys[] = {'R', 'H', 'S', '\0', 'A'};
-
-    //printf("key: 0x%02x, ", key);
-    for(i = 0; i < 5; i++){
-        if(key % 2 == 1 && i != 3){
-            string[j++] = keys[i];
-        }
-        key = key >> 1;
+  int i, j = 0;
+  char keys[] = {'R', 'H', 'S', '\0', '\0', 'A'};
+  
+  for(i = 0; i < 6; i++){
+    if( (key >> i) % 2 == 1 && i != 3 && i != 4){
+      string[j++] = keys[i];
     }
-   // printf("string: %s\n", string);
-    // while(j < 13){
-    //     string[j++] = '\0';
-    // }
-    return string;
+  }
+  string[j] = '\0';
+  
+  return string;
 } // end parseAttributes()
 
 
@@ -229,7 +224,7 @@ char * parseDate(char string[], unsigned short usDate){
     
     day = (usDate & 31);
     month = (usDate >> 5) & 15;
-    year = (usDate >> 9) & 127;
+    year = ( (usDate >> 9) & 127) + 1980;
 
     sprintf(string, "%d/%d/%d", year, month, day);
 
@@ -249,19 +244,19 @@ int roundup512(int number){
 
 // Formats a filename string as DOS (adds the dot to 8-dot-3)
 char * toDOSName(char string[], unsigned char buffer[], int offset){
-    //printf("starting at %d\n", offset);
-    int i = 0, j;
-    //printf("Value of first: 0x%02x\n", buffer[i + offset]);
-    //printf("is equal to 0x20: %d\n", buffer[i + offset] != 0x20);
+    int j, i = 0;
     
-    while(buffer[i + offset] != 0x20 || i == 8){
+    while(buffer[i + offset] != 0x20 && i < 8){
       string[i] = buffer[i + offset];
       i++;
     }
     string[i++] = '.';
-    for(j = 8; i < 11; i++){
-      string[i] = buffer[j + offset];
+    for(j = 8; j < 11; j++){
+      string[i++] = buffer[j + offset];
     }
-    string[i] = '\0';
+    string[i++] =  ' ';
+    while(i < 13){
+      string[i++] = 0x00;
+    }
     return string;
 } // end toDosNameRead-Only Bit
