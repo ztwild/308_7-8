@@ -1,2 +1,10 @@
 Summary:
+For lab 7 we were decoding a binary file of a boot sector.
+We learned what the values mean at specific addresses,
+the length of the values, and translating them from little to big endian.
 
+For lab 8 we used the same information from lab 7 to get the basic information
+of the bootsector and inspect the files and their information, such as their name,
+file extension, attributes, date time, and size.  First we find the directory offset 
+for the data.  (1 + (sectors per fat * Number of fats) ) * bytes per sector.
+From that offset we read the 32 bits for each directory.
